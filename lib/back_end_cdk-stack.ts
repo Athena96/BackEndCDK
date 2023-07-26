@@ -12,9 +12,10 @@ export class BackEndCdkStack extends cdk.Stack {
     const helloLambda = new lambda.Function(this, "BackendHandler", {
       runtime: lambda.Runtime.JAVA_11, // execution environment
       code: lambda.Code.fromAsset(
-        "../BackEnd/BackEnd/target/BackEnd-1.0-SNAPSHOT-jar-with-dependencies.jar"
+        "../BackEnd/target/BackEnd-1.0-SNAPSHOT-jar-with-dependencies.jar"
       ), // code loaded from the "lambda" directory
       handler: "com.example.App::handleRequest", // file is "hello", function is "handler"
+      timeout: cdk.Duration.seconds(30),
     });
 
     // Define the API Gateway
