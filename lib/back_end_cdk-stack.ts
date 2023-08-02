@@ -10,11 +10,11 @@ export class BackEndCdkStack extends cdk.Stack {
 
     // Define the Lambda function
     const helloLambda = new lambda.Function(this, "BackendHandler", {
-      runtime: lambda.Runtime.JAVA_11, // execution environment
+      runtime: lambda.Runtime.JAVA_17, // execution environment
       code: lambda.Code.fromAsset(
-        "../BackEnd/target/BackEnd-1.0-SNAPSHOT-jar-with-dependencies.jar"
+        "../BackEnd/target/my-service-1.0-SNAPSHOT-lambda-package.zip"
       ), // code loaded from the "lambda" directory
-      handler: "com.example.App::handleRequest", // file is "hello", function is "handler"
+      handler: "my.service.StreamLambdaHandler::handleRequest", // file is "hello", function is "handler"
       timeout: cdk.Duration.seconds(30),
     });
 
@@ -51,6 +51,10 @@ export class BackEndCdkStack extends cdk.Stack {
       restApiId: helloApi.restApiId,
       type: apigw.AuthorizationType.COGNITO,
     });
+
+    helloApi.root
+      .resourceForPath("ping")
+      .addMethod("POST", new apigw.LambdaIntegration(helloLambda));
 
     helloApi.root
       .resourceForPath("router")

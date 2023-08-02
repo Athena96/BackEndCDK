@@ -5,7 +5,7 @@ backend_cdk_directory="BackEndCDK"
 
 echo "Starting deploy script..."
 
-echo "cd to backend package"
+echo "cd to $backend_directory package"
 
 cd ..
 
