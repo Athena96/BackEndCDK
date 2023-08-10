@@ -3,10 +3,32 @@ import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export class BackEndCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Defing Dynamo DB Tables
+    const recurringTable = new dynamodb.Table(this, 'Recurring', {
+      tableName: 'Recurring',
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
+    });
+    
+    recurringTable.addGlobalSecondaryIndex({
+      indexName: 'UserEmailIndex',
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
+    });
+
+    // Role for Lambda
+    const lambdaRole = new iam.Role(this, 'BackendAPILambdaRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+    });
+
+    lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'));
+    lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
 
     // Define the Lambda function
     const helloLambda = new lambda.Function(this, "BackendHandler", {
@@ -16,6 +38,10 @@ export class BackEndCdkStack extends cdk.Stack {
       ), // code loaded from the "lambda" directory
       handler: "my.service.StreamLambdaHandler::handleRequest", // file is "hello", function is "handler"
       timeout: cdk.Duration.seconds(30),
+      role: lambdaRole,
+      environment: {
+        RECURRING_TABLE_NAME: recurringTable.tableName,
+      },
     });
 
     // Define the API Gateway
@@ -59,6 +85,11 @@ export class BackEndCdkStack extends cdk.Stack {
     helloApi.root
       .resourceForPath("router")
       .addMethod("POST", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+      .resourceForPath("recurring")
+      .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
+
 
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
