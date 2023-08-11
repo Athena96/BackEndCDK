@@ -11,13 +11,48 @@ export class BackEndCdkStack extends cdk.Stack {
     super(scope, id, props);
 
     // Defing Dynamo DB Tables
+
+    // Recurring Table
     const recurringTable = new dynamodb.Table(this, 'Recurring', {
       tableName: 'Recurring',
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
-    });
-    
+    })
+
     recurringTable.addGlobalSecondaryIndex({
+      indexName: 'UserEmailIndex',
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
+    });
+
+    // One Time Table
+    const oneTimeTable = new dynamodb.Table(this, 'OneTime', {
+      tableName: 'OneTime',
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
+    })
+    oneTimeTable.addGlobalSecondaryIndex({
+      indexName: 'UserEmailIndex',
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
+    });
+
+    // Assets Table
+    const assetsTable = new dynamodb.Table(this, 'Assets', {
+      tableName: 'Assets',
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
+    })
+    assetsTable.addGlobalSecondaryIndex({
+      indexName: 'UserEmailIndex',
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
+    });
+
+    // Settings Table
+    const settingsTable = new dynamodb.Table(this, 'Settings', {
+      tableName: 'Settings',
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
+    })
+    settingsTable.addGlobalSecondaryIndex({
       indexName: 'UserEmailIndex',
       partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
     });
@@ -41,6 +76,9 @@ export class BackEndCdkStack extends cdk.Stack {
       role: lambdaRole,
       environment: {
         RECURRING_TABLE_NAME: recurringTable.tableName,
+        ONE_TIME_TABLE_NAME: oneTimeTable.tableName,
+        ASSETS_TABLE_NAME: assetsTable.tableName,
+        SETTINGS_TABLE_NAME: settingsTable.tableName,
       },
     });
 
@@ -90,6 +128,17 @@ export class BackEndCdkStack extends cdk.Stack {
       .resourceForPath("recurring")
       .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
 
+    helloApi.root
+      .resourceForPath("onetime")
+      .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+      .resourceForPath("assets")
+      .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+      .resourceForPath("settings")
+      .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
 
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
