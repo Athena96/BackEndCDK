@@ -12,49 +12,24 @@ export class BackEndCdkStack extends cdk.Stack {
 
     // Defing Dynamo DB Tables
 
-    // Recurring Table
-    const recurringTable = new dynamodb.Table(this, 'Recurring', {
-      tableName: 'Recurring',
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    // Scenarios Table
+    const scenariosTable = new dynamodb.Table(this, 'MoneyApp-Scenarios', {
+      tableName: 'MoneyApp-Scenarios',
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
     })
 
-    recurringTable.addGlobalSecondaryIndex({
+    scenariosTable.addGlobalSecondaryIndex({
       indexName: 'UserEmailIndex',
       partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
     });
 
-    // One Time Table
-    const oneTimeTable = new dynamodb.Table(this, 'OneTime', {
-      tableName: 'OneTime',
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    // Data Table
+    const dataTable = new dynamodb.Table(this, 'MoneyApp-Data', {
+      tableName: 'MoneyApp-ScenarioData',
+      partitionKey: { name: 'scenarioDataId', type: dynamodb.AttributeType.STRING }, // email_scenarioId
+      sortKey: { name: 'type', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
-    })
-    oneTimeTable.addGlobalSecondaryIndex({
-      indexName: 'UserEmailIndex',
-      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
-    });
-
-    // Assets Table
-    const assetsTable = new dynamodb.Table(this, 'Assets', {
-      tableName: 'Assets',
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
-    })
-    assetsTable.addGlobalSecondaryIndex({
-      indexName: 'UserEmailIndex',
-      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
-    });
-
-    // Settings Table
-    const settingsTable = new dynamodb.Table(this, 'Settings', {
-      tableName: 'Settings',
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
-    })
-    settingsTable.addGlobalSecondaryIndex({
-      indexName: 'UserEmailIndex',
-      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
     });
 
     // Role for Lambda
@@ -74,12 +49,22 @@ export class BackEndCdkStack extends cdk.Stack {
       handler: "my.service.StreamLambdaHandler::handleRequest", // file is "hello", function is "handler"
       timeout: cdk.Duration.seconds(30),
       role: lambdaRole,
+
       environment: {
-        RECURRING_TABLE_NAME: recurringTable.tableName,
-        ONE_TIME_TABLE_NAME: oneTimeTable.tableName,
-        ASSETS_TABLE_NAME: assetsTable.tableName,
-        SETTINGS_TABLE_NAME: settingsTable.tableName,
+        SCENARIO_TABLE: scenariosTable.tableName,
+        DATA_TABLE: dataTable.tableName,
       },
+    });
+
+    const version = helloLambda.currentVersion;
+    const alias = new lambda.Alias(this, 'LambdaAlias1', {
+      aliasName: 'Prod1',
+      version,
+    });
+
+    alias.addAutoScaling({
+      minCapacity: 2,
+      maxCapacity: 10
     });
 
     // Define the API Gateway
@@ -121,23 +106,11 @@ export class BackEndCdkStack extends cdk.Stack {
       .addMethod("POST", new apigw.LambdaIntegration(helloLambda));
 
     helloApi.root
-      .resourceForPath("router")
-      .addMethod("POST", new apigw.LambdaIntegration(helloLambda));
-
-    helloApi.root
-      .resourceForPath("recurring")
+      .resourceForPath("listScenarios")
       .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
 
     helloApi.root
-      .resourceForPath("onetime")
-      .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
-
-    helloApi.root
-      .resourceForPath("assets")
-      .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
-
-    helloApi.root
-      .resourceForPath("settings")
+      .resourceForPath("getScenarioData")
       .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
 
     new cdk.CfnOutput(this, "UserPoolId", {
