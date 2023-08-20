@@ -14,15 +14,12 @@ export class BackEndCdkStack extends cdk.Stack {
 
     // Scenarios Table
     const scenariosTable = new dynamodb.Table(this, 'MoneyApp-Scenarios', {
-      tableName: 'MoneyApp-Scenarios',
+      tableName: 'MoneyApp-Scenario',
       partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'active', type: dynamodb.AttributeType.NUMBER },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
     })
 
-    scenariosTable.addGlobalSecondaryIndex({
-      indexName: 'UserEmailIndex',
-      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING }
-    });
 
     // Data Table
     const dataTable = new dynamodb.Table(this, 'MoneyApp-Data', {
@@ -57,8 +54,8 @@ export class BackEndCdkStack extends cdk.Stack {
     });
 
     const version = helloLambda.currentVersion;
-    const alias = new lambda.Alias(this, 'LambdaAlias1', {
-      aliasName: 'Prod1',
+    const alias = new lambda.Alias(this, 'LambdaAlias2', {
+      aliasName: 'Prod2',
       version,
     });
 

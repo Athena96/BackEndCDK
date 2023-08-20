@@ -1,5 +1,5 @@
 # Deploy Command
 
 ```
-yes | sudo ./deploy.sh
+sudo ./deploy.sh
 ```
