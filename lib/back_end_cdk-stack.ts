@@ -45,6 +45,7 @@ export class BackEndCdkStack extends cdk.Stack {
       ), // code loaded from the "lambda" directory
       handler: "my.service.StreamLambdaHandler::handleRequest", // file is "hello", function is "handler"
       timeout: cdk.Duration.seconds(30),
+      memorySize: 1024,
       role: lambdaRole,
 
       environment: {
@@ -63,6 +64,10 @@ export class BackEndCdkStack extends cdk.Stack {
       minCapacity: 2,
       maxCapacity: 10
     });
+
+    // Enable SnapStart
+    const cfnFunction = helloLambda.node.defaultChild as lambda.CfnFunction;
+    cfnFunction.addPropertyOverride("SnapStart", { ApplyOn: "PublishedVersions" });
 
     // Define the API Gateway
     const helloApi = new apigw.LambdaRestApi(this, "Endpoint", {
