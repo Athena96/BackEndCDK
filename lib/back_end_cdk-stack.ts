@@ -127,6 +127,10 @@ export class BackEndCdkStack extends cdk.Stack {
       .resourceForPath("listOneTime")
       .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
 
+    helloApi.root
+      .resourceForPath("getSettings")
+      .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
+
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
