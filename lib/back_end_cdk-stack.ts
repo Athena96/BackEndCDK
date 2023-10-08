@@ -131,6 +131,18 @@ export class BackEndCdkStack extends cdk.Stack {
       .resourceForPath("getSettings")
       .addMethod("GET", new apigw.LambdaIntegration(helloLambda));
 
+    helloApi.root
+      .resourceForPath("addAsset")
+      .addMethod("POST", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+      .resourceForPath("updateAsset")
+      .addMethod("PUT", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+      .resourceForPath("deleteAsset")
+      .addMethod("DELETE", new apigw.LambdaIntegration(helloLambda));
+
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
