@@ -147,6 +147,18 @@ export class BackEndCdkStack extends cdk.Stack {
       .resourceForPath("updateSettings")
       .addMethod("PUT", new apigw.LambdaIntegration(helloLambda));
 
+      helloApi.root
+      .resourceForPath("addRecurring")
+      .addMethod("POST", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+      .resourceForPath("updateRecurring")
+      .addMethod("PUT", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+      .resourceForPath("deleteRecurring")
+      .addMethod("DELETE", new apigw.LambdaIntegration(helloLambda));
+
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
