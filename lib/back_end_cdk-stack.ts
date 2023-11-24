@@ -14,16 +14,16 @@ export class BackEndCdkStack extends cdk.Stack {
 
     // Scenarios Table
     const scenariosTable = new dynamodb.Table(this, 'MoneyApp-Scenarios', {
-      tableName: 'MoneyApp-Scenario',
+      tableName: 'MoneyApp-Scenario-Table',
       partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'active', type: dynamodb.AttributeType.NUMBER },
+      sortKey: { name: 'scenarioId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
     })
 
 
     // Data Table
     const dataTable = new dynamodb.Table(this, 'MoneyApp-Data', {
-      tableName: 'MoneyApp-ScenarioData',
+      tableName: 'MoneyApp-ScenarioData-Table',
       partitionKey: { name: 'scenarioDataId', type: dynamodb.AttributeType.STRING }, // email_scenarioId
       sortKey: { name: 'type', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Change as per your needs
@@ -159,6 +159,24 @@ export class BackEndCdkStack extends cdk.Stack {
       .resourceForPath("deleteRecurring")
       .addMethod("DELETE", new apigw.LambdaIntegration(helloLambda));
 
+
+    helloApi.root
+    .resourceForPath("addScenario")
+    .addMethod("POST", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+    .resourceForPath("changeActiveScenario")
+    .addMethod("PUT", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+    .resourceForPath("updateScenario")
+    .addMethod("PUT", new apigw.LambdaIntegration(helloLambda));
+
+    helloApi.root
+    .resourceForPath("deleteScenario")
+    .addMethod("DELETE", new apigw.LambdaIntegration(helloLambda));
+
+    
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
