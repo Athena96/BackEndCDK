@@ -52,22 +52,30 @@ export class BackEndCdkStack extends cdk.Stack {
         SCENARIO_TABLE: scenariosTable.tableName,
         DATA_TABLE: dataTable.tableName,
       },
+      reservedConcurrentExecutions: 100,
     });
+
+    // new lambda.Alias(this, 'LambdaAlias', {
+    //   aliasName: 'MyAlias',
+    //   version: version,
+    //   provisionedConcurrentExecutions: 5, // Set the provisioned concurrency
+    // });
 
     const version = helloLambda.currentVersion;
-    const alias = new lambda.Alias(this, 'LambdaAlias2', {
+    new lambda.Alias(this, 'LambdaAlias2', {
       aliasName: 'Prod2',
       version,
+      provisionedConcurrentExecutions: 1, // Set the provisioned concurrency
     });
 
-    alias.addAutoScaling({
-      minCapacity: 2,
-      maxCapacity: 10
-    });
+    // alias.addAutoScaling({
+    //   minCapacity: 2,
+    //   maxCapacity: 10
+    // });
 
     // Enable SnapStart
-    const cfnFunction = helloLambda.node.defaultChild as lambda.CfnFunction;
-    cfnFunction.addPropertyOverride("SnapStart", { ApplyOn: "PublishedVersions" });
+    // const cfnFunction = helloLambda.node.defaultChild as lambda.CfnFunction;
+    // cfnFunction.addPropertyOverride("SnapStart", { ApplyOn: "PublishedVersions" });
 
     // Define the API Gateway
     const helloApi = new apigw.LambdaRestApi(this, "Endpoint", {
