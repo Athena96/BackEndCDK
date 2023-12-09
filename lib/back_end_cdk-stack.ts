@@ -35,11 +35,19 @@ export class BackEndCdkStack extends cdk.Stack {
     });
 
     lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'));
+    lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonCognitoPowerUser'));
     lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
+
+    // Define Cognito User Pool
+    const userPool = new cognito.UserPool(this, "MyUserPool", {
+      selfSignUpEnabled: true, // allow users to sign up
+      autoVerify: { email: true }, // verify email addresses by sending a verification code
+      signInAliases: { email: true }, // set email as an alias
+    });
 
     // Define the Lambda function
     const helloLambda = new lambda.Function(this, "BackendHandler", {
-      runtime: lambda.Runtime.JAVA_17, // execution environment
+      runtime: lambda.Runtime.JAVA_21, // execution environment
       code: lambda.Code.fromAsset(
         "../BackEnd/target/my-service-1.0-SNAPSHOT-lambda-package.zip"
       ), // code loaded from the "lambda" directory
@@ -51,6 +59,7 @@ export class BackEndCdkStack extends cdk.Stack {
       environment: {
         SCENARIO_TABLE: scenariosTable.tableName,
         DATA_TABLE: dataTable.tableName,
+        MT_USER_POOL_ID: userPool.userPoolId
       },
       reservedConcurrentExecutions: 100,
     });
@@ -84,15 +93,11 @@ export class BackEndCdkStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigw.Cors.ALL_ORIGINS,
         allowMethods: apigw.Cors.ALL_METHODS, // this is also the default setting
+        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'idtoken'],
       },
     });
 
-    // Define Cognito User Pool
-    const userPool = new cognito.UserPool(this, "MyUserPool", {
-      selfSignUpEnabled: true, // allow users to sign up
-      autoVerify: { email: true }, // verify email addresses by sending a verification code
-      signInAliases: { email: true }, // set email as an alias
-    });
+
 
     const userPoolClient = new cognito.UserPoolClient(
       this,
@@ -184,7 +189,10 @@ export class BackEndCdkStack extends cdk.Stack {
     .resourceForPath("deleteScenario")
     .addMethod("DELETE", new apigw.LambdaIntegration(helloLambda));
 
-    
+    helloApi.root
+    .resourceForPath("deleteAccount")
+    .addMethod("DELETE", new apigw.LambdaIntegration(helloLambda));
+
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
