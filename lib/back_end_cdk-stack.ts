@@ -70,12 +70,12 @@ export class BackEndCdkStack extends cdk.Stack {
     //   provisionedConcurrentExecutions: 5, // Set the provisioned concurrency
     // });
 
-    const version = helloLambda.currentVersion;
-    new lambda.Alias(this, 'LambdaAlias2', {
-      aliasName: 'Prod2',
-      version,
-      provisionedConcurrentExecutions: 1, // Set the provisioned concurrency
-    });
+    // const version = helloLambda.currentVersion;
+    // new lambda.Alias(this, 'LambdaAlias2', {
+    //   aliasName: 'Prod2',
+    //   version,
+    //   provisionedConcurrentExecutions: 1, // Set the provisioned concurrency
+    // });
 
     // alias.addAutoScaling({
     //   minCapacity: 2,
